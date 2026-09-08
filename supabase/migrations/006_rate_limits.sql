@@ -39,7 +39,7 @@ begin
     raise exception 'Invalid rate-limit request';
   end if;
 
-  hashed_identifier := encode(digest(p_identifier, 'sha256'), 'hex');
+  hashed_identifier := encode(extensions.digest(p_identifier, 'sha256'), 'hex');
 
   insert into public.rate_limits(action, identifier_hash, window_start, request_count)
   values (p_action, hashed_identifier, now(), 1)
