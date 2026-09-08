@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { checkoutSchema } from "@/lib/validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   if (!hasSupabaseEnv) return NextResponse.json({ error: "Database is not connected yet. Add the Supabase environment variables first." }, { status: 503 });
@@ -11,6 +12,7 @@ export async function POST(request: Request) {
   try {
     const parsed = checkoutSchema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid order" }, { status: 400 });
+    if (!await verifyTurnstile(request, parsed.data.turnstile_token, "checkout")) return NextResponse.json({ error: "Security verification failed. Please complete the challenge and try again." }, { status: 403 });
     const supabase = await createClient();
     const slugs = parsed.data.items.map(item => item.slug);
     const { data: productRows, error: productError } = await supabase.from("products").select("id,slug").in("slug", slugs).eq("status", "active");

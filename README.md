@@ -34,3 +34,13 @@ Open `http://localhost:3000`.
 Migration `006_rate_limits.sql` enables shared production limits: 5 order attempts per 10 minutes, 20 tracking attempts per minute, and 5 used-phone submissions per 10 minutes for each client address.
 
 With credentials configured, storefront products come from PostgreSQL; checkout, tracking, stock confirmation, and used-phone requests are persistent. Without credentials, the storefront remains usable with its fallback demonstration catalog and database actions show a setup message.
+## Cloudflare Turnstile
+
+Checkout and used-phone submissions require Turnstile in production. Create a Turnstile widget in Cloudflare, allow your production hostname, and configure:
+
+```env
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_public_site_key
+TURNSTILE_SECRET_KEY=your_private_secret_key
+```
+
+Add both variables to the production hosting environment. The secret key is server-only and must never be exposed or committed. Local development uses an explicit development bypass when these keys are absent; production fails closed if they are missing. Turnstile tokens are verified server-side for the expected form action and are single-use.
