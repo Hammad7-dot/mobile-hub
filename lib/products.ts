@@ -13,6 +13,11 @@ export type Product = {
   os: string;
   color: string;
   images?: string[];
+  description?: string;
+  stock?: number;
+  ptaApproved?: boolean;
+  warranty?: string;
+  sku?: string;
   featured?: boolean;
   isNew?: boolean;
 };
