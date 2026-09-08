@@ -1,8 +1,4 @@
--- Fix Pakistani phone normalization for existing installations.
-
-create or replace function public.normalize_pk_phone(value text)
-returns text language sql immutable
-as $$ select regexp_replace(regexp_replace(regexp_replace(value, '\D', '', 'g'), '^92', ''), '^0', ''); $$;
+-- Make order delivery charges follow Admin Settings.
 
 create or replace function public.place_order(customer jsonb, items jsonb)
 returns jsonb language plpgsql security definer set search_path = public
@@ -33,9 +29,3 @@ begin
   end loop;
   return jsonb_build_object('order_number',new_order.order_number,'total',new_order.total,'status',new_order.status);
 end; $$;
-
-create or replace function public.track_order(order_no text, customer_phone text)
-returns jsonb language sql stable security definer set search_path = public
-as $$ select jsonb_build_object('order_number',order_number,'status',status,'total',total,'created_at',created_at) from public.orders where upper(order_number)=upper(trim(order_no)) and phone=public.normalize_pk_phone(customer_phone) limit 1; $$;
-
-

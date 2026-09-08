@@ -155,7 +155,7 @@ as $$ select regexp_replace(regexp_replace(regexp_replace(value, '\D', '', 'g'),
 create or replace function public.place_order(customer jsonb, items jsonb)
 returns jsonb language plpgsql security definer set search_path = public
 as $$
-declare new_order public.orders; item jsonb; product_row public.products; customer_uuid uuid; computed_subtotal numeric := 0; fee numeric := 0; normalized_phone text;
+declare new_order public.orders; item jsonb; product_row public.products; customer_uuid uuid; computed_subtotal numeric := 0; fee numeric := 0; normalized_phone text; store_config jsonb; configured_fee numeric := 500; free_threshold numeric := 50000;
 begin
   normalized_phone := public.normalize_pk_phone(customer->>'phone');
   if normalized_phone !~ '^3[0-9]{9}$' then raise exception 'Invalid Pakistani phone number'; end if;
@@ -167,7 +167,10 @@ begin
     if (item->>'quantity')::integer < 1 or (item->>'quantity')::integer > 10 or product_row.stock < (item->>'quantity')::integer then raise exception 'Insufficient stock for %', product_row.name; end if;
     computed_subtotal := computed_subtotal + product_row.price * (item->>'quantity')::integer;
   end loop;
-  if computed_subtotal < 50000 then fee := 500; end if;
+  select value into store_config from public.site_settings where key = 'store';
+  configured_fee := greatest(coalesce((store_config->>'delivery_fee')::numeric, 500), 0);
+  free_threshold := greatest(coalesce((store_config->>'free_delivery_threshold')::numeric, 50000), 0);
+  if computed_subtotal < free_threshold then fee := configured_fee; end if;
   insert into public.customers(full_name, phone, email, city, address, user_id)
     values(trim(customer->>'full_name'), normalized_phone, nullif(trim(customer->>'email'),''), trim(customer->>'city'), trim(customer->>'address'), auth.uid()) returning id into customer_uuid;
   insert into public.orders(order_number, customer_id, user_id, customer_name, phone, email, city, address, notes, subtotal, delivery_fee, total)
