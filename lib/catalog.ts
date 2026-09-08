@@ -6,7 +6,7 @@ type ProductRow = {
   slug: string; name: string; sku: string | null; description: string; price: number;
   compare_at_price: number | null; stock: number; featured: boolean; status: string;
   pta_approved: boolean; warranty: string; specifications: Record<string, string>;
-  images: string[]; brands: { name: string } | { name: string }[] | null;
+  images: string[]; variants: import("@/lib/products").ProductVariant[]; brands: { name: string } | { name: string }[] | null;
 };
 
 const bundledImages: Record<string, string[]> = { "xiaomi-redmi-note-14-pro": ["/products/xiaomi-redmi-note-14-pro.webp"] };
@@ -20,7 +20,7 @@ function mapProduct(row: ProductRow): Product {
     ram: specs.ram || "—", storage: specs.storage || "—", display: specs.display || "—",
     processor: specs.processor || "—", camera: specs.camera || "—",
     battery: specs.battery || "—", os: specs.os || "—", color: "#d8ba72",
-    images: row.images?.length ? row.images : (bundledImages[row.slug] || []), featured: row.featured, isNew: row.status === "upcoming",
+    images: row.images?.length ? row.images : (bundledImages[row.slug] || []), variants: Array.isArray(row.variants) ? row.variants : [], featured: row.featured, isNew: row.status === "upcoming",
     description: row.description, stock: row.stock, ptaApproved: row.pta_approved,
     warranty: row.warranty, sku: row.sku || undefined
   };
@@ -30,7 +30,7 @@ export async function getProducts() {
   if (!hasSupabaseEnv) return fallbackProducts;
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("products").select("slug,name,sku,description,price,compare_at_price,stock,featured,status,pta_approved,warranty,specifications,images,brands(name)").in("status", ["active", "upcoming"]).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("products").select("slug,name,sku,description,price,compare_at_price,stock,featured,status,pta_approved,warranty,specifications,images,variants,brands(name)").in("status", ["active", "upcoming"]).order("created_at", { ascending: false });
     if (error || !data?.length) return fallbackProducts;
     return (data as unknown as ProductRow[]).map(mapProduct);
   } catch {

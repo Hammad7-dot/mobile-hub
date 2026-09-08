@@ -1,4 +1,7 @@
--- Make order delivery charges follow Admin Settings.
+-- Preserve validated product variants on order items.
+
+alter table public.order_items add column if not exists variant_id text;
+alter table public.order_items add column if not exists variant_label text;
 
 create or replace function public.place_order(customer jsonb, items jsonb)
 returns jsonb language plpgsql security definer set search_path = public

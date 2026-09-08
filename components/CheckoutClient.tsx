@@ -13,7 +13,7 @@ export default function CheckoutClient({ deliveryFee, freeDeliveryThreshold }: {
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const grouped = useMemo(() => items.reduce<Record<string, number>>((a, item) => ({ ...a, [item.slug]: (a[item.slug] || 0) + 1 }), {}), [items]);
+  const grouped = useMemo(() => items.reduce<Record<string, number>>((a, item) => ({ ...a, [item.slug+"::"+(item.variant?.id||"default")]: (a[item.slug+"::"+(item.variant?.id||"default")] || 0) + 1 }), {}), [items]);
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -21,7 +21,7 @@ export default function CheckoutClient({ deliveryFee, freeDeliveryThreshold }: {
     const form = new FormData(event.currentTarget);
     const body = Object.fromEntries(form.entries());
     try {
-      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, items: Object.entries(grouped).map(([slug, quantity]) => ({ slug, quantity })) }) });
+      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, items: Object.entries(grouped).map(([key, quantity]) => { const [slug, variant_id] = key.split("::"); const item = items.find(line => line.slug === slug && (line.variant?.id || "default") === variant_id); return { slug, quantity, variant_id: variant_id === "default" ? undefined : variant_id, variant_label: item?.variant?.label }; }) }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Order could not be placed");
       setConfirmation(result); clear();

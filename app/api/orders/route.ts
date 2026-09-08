@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const slugs = parsed.data.items.map(item => item.slug);
     const { data: productRows, error: productError } = await supabase.from("products").select("id,slug").in("slug", slugs).eq("status", "active");
     if (productError || !productRows || productRows.length !== new Set(slugs).size) return NextResponse.json({ error: "One or more products are unavailable." }, { status: 409 });
-    const databaseItems = parsed.data.items.map(item => ({ product_id: productRows.find(row => row.slug === item.slug)!.id, quantity: item.quantity }));
+    const databaseItems = parsed.data.items.map(item => ({ product_id: productRows.find(row => row.slug === item.slug)!.id, variant_id: item.variant_id, variant_label: item.variant_label, quantity: item.quantity }));
     const customer = { full_name: parsed.data.full_name, phone: parsed.data.phone, email: parsed.data.email, city: parsed.data.city, address: parsed.data.address, notes: parsed.data.notes };
     const { data, error } = await supabase.rpc("place_order", { customer, items: databaseItems });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -28,3 +28,4 @@
 .admin-settings-form{max-width:900px;background:#fff;border:1px solid #dfd8cc;padding:24px}.admin-note{margin-top:16px;color:#766d5f;font-size:12px}
 .admin-success{background:#e3f2e4;border:1px solid #acd2af;color:#245d2a;padding:12px 15px;border-radius:5px;margin-bottom:18px}
 .detail-image-unavailable{min-height:520px;display:grid;place-items:center;border:1px dashed #cfc4af;border-radius:8px;background:#f4f1eb;color:#817867;font-size:13px}
+.purchase-actions{display:grid;gap:14px}.variant-picker{display:grid;gap:7px;font-size:11px;font-weight:700;color:#665d4e}.variant-picker select{width:100%;padding:12px;border:1px solid #d4c9b5;border-radius:5px;background:#fff}.admin-product-form label small{display:block;margin-top:5px;color:#887e6d;text-transform:none}

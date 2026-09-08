@@ -1,5 +1,11 @@
 "use server";
 
+function parseVariants(value: FormDataEntryValue | null) {
+  return String(value || "").split(/\r?\n/).map(line => line.split("|").map(part => part.trim())).filter(parts => parts.some(Boolean)).slice(0, 20).map(([ram = "", storage = "", color = ""]) => { const label = [ram, storage, color].filter(Boolean).join(" · "); return { id: label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), ram, storage, color, label }; }).filter(variant => variant.id && variant.label);
+}
+
+
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
@@ -21,7 +27,7 @@ export async function saveProduct(formData: FormData) {
     status: String(formData.get("status")), featured: formData.get("featured") === "on",
     pta_approved: formData.get("pta_approved") === "on",
     warranty: String(formData.get("warranty") || "1 Year"),
-    description: String(formData.get("description") || ""), images: parseImages(formData.get("images")),
+    description: String(formData.get("description") || ""), variants: parseVariants(formData.get("variants")), images: parseImages(formData.get("images")),
     specifications: Object.fromEntries(["ram", "storage", "display", "processor", "camera", "battery", "os"].map(key => [key, String(formData.get(key) || "")])),
     updated_at: new Date().toISOString()
   };

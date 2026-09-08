@@ -1,3 +1,5 @@
+export type ProductVariant = { id: string; ram: string; storage: string; color: string; label: string };
+
 export type Product = {
   slug: string;
   name: string;
@@ -18,6 +20,7 @@ export type Product = {
   ptaApproved?: boolean;
   warranty?: string;
   sku?: string;
+  variants?: ProductVariant[];
   featured?: boolean;
   isNew?: boolean;
 };
