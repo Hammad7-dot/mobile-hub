@@ -14,13 +14,21 @@ const bundledImages: Record<string, string[]> = { "xiaomi-redmi-note-14-pro": ["
 function mapProduct(row: ProductRow): Product {
   const brand = Array.isArray(row.brands) ? row.brands[0]?.name : row.brands?.name;
   const specs = row.specifications || {};
+  const variants = Array.isArray(row.variants) ? row.variants.map((variant, index) => {
+    const ram = String(variant.ram || specs.ram || "");
+    const storage = String(variant.storage || "");
+    const color = String(variant.color || "");
+    const label = String(variant.label || [ram, storage, color].filter(Boolean).join(" · "));
+    const generatedId = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return { id: String(variant.id || generatedId || `${row.slug}-${index + 1}`), ram, storage, color, label };
+  }).filter((variant, index, list) => list.findIndex(item => item.id === variant.id) === index) : [];
   return {
     slug: row.slug, name: row.name, brand: brand || "Other", price: Number(row.price),
     oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
     ram: specs.ram || "—", storage: specs.storage || "—", display: specs.display || "—",
     processor: specs.processor || "—", camera: specs.camera || "—",
     battery: specs.battery || "—", os: specs.os || "—", color: "#d8ba72",
-    images: row.images?.length ? row.images : (bundledImages[row.slug] || []), variants: Array.isArray(row.variants) ? row.variants : [], featured: row.featured, isNew: row.status === "upcoming",
+    images: row.images?.length ? row.images : (bundledImages[row.slug] || []), variants, featured: row.featured, isNew: row.status === "upcoming",
     description: row.description, stock: row.stock, ptaApproved: row.pta_approved,
     warranty: row.warranty, sku: row.sku || undefined
   };
