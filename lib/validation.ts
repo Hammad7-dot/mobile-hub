@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const pakistanPhone = z.string().transform(v => v.replace(/\D/g, "")).refine(v => /^(?:92)?3\d{9}$/.test(v), "Enter a valid Pakistani mobile number");
+export const pakistanPhone = z.string().transform(value => value.replace(/\D/g, "").replace(/^92/, "").replace(/^0/, "")).refine(value => /^3\d{9}$/.test(value), "Enter a valid Pakistani mobile number");
 
 export const checkoutSchema = z.object({
   full_name: z.string().trim().min(2).max(80),

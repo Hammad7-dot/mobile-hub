@@ -12,6 +12,7 @@ export type Product = {
   battery: string;
   os: string;
   color: string;
+  images?: string[];
   featured?: boolean;
   isNew?: boolean;
 };
