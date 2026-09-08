@@ -9,6 +9,8 @@ type ProductRow = {
   images: string[]; brands: { name: string } | { name: string }[] | null;
 };
 
+const bundledImages: Record<string, string[]> = { "xiaomi-redmi-note-14-pro": ["/products/xiaomi-redmi-note-14-pro.webp"] };
+
 function mapProduct(row: ProductRow): Product {
   const brand = Array.isArray(row.brands) ? row.brands[0]?.name : row.brands?.name;
   const specs = row.specifications || {};
@@ -18,7 +20,7 @@ function mapProduct(row: ProductRow): Product {
     ram: specs.ram || "—", storage: specs.storage || "—", display: specs.display || "—",
     processor: specs.processor || "—", camera: specs.camera || "—",
     battery: specs.battery || "—", os: specs.os || "—", color: "#d8ba72",
-    images: row.images || [], featured: row.featured, isNew: row.status === "upcoming",
+    images: row.images?.length ? row.images : (bundledImages[row.slug] || []), featured: row.featured, isNew: row.status === "upcoming",
     description: row.description, stock: row.stock, ptaApproved: row.pta_approved,
     warranty: row.warranty, sku: row.sku || undefined
   };
