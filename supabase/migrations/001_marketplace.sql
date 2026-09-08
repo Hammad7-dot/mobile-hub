@@ -220,7 +220,9 @@ alter table public.used_phone_requests enable row level security;
 alter table public.site_settings enable row level security;
 
 create policy "profiles own read" on public.profiles for select using (id = auth.uid() or public.is_admin());
-create policy "profiles own update" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid() and role = 'customer');
+create policy "profiles own update" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
+revoke update on table public.profiles from authenticated;
+grant update(full_name, phone, updated_at) on table public.profiles to authenticated;
 create policy "brands public read" on public.brands for select using (is_active or public.is_admin());
 create policy "brands admin write" on public.brands for all using (public.is_admin()) with check (public.is_admin());
 create policy "products public read" on public.products for select using (status in ('active','upcoming') or public.is_admin());
