@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { checkoutSchema } from "@/lib/validation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   if (!hasSupabaseEnv) return NextResponse.json({ error: "Database is not connected yet. Add the Supabase environment variables first." }, { status: 503 });
+  const limited = rateLimitResponse(await checkRateLimit(request, "order:create"));
+  if (limited) return limited;
   try {
     const parsed = checkoutSchema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid order" }, { status: 400 });

@@ -25,10 +25,12 @@ Open `http://localhost:3000`.
 ## Supabase and admin setup
 
 1. Create a Supabase project.
-2. Run `supabase/migrations/001_marketplace.sql` in the Supabase SQL Editor.
-3. Run `supabase/seed.sql`.
-4. Copy `.env.example` to `.env.local` and enter the project URL, publishable key, and service-role key. Never expose or commit the service-role key.
+2. Run every SQL file in `supabase/migrations` in numerical order (`001` through `006`) using the Supabase SQL Editor.
+3. Run `supabase/seed.sql` only when creating a new, empty catalog.
+4. Copy `.env.example` to `.env.local` and enter the project URL and publishable key. Never expose or commit privileged database keys.
 5. Create an administrator in Supabase Authentication, then set that profile's role to `admin` as shown at `/admin/setup`.
 6. Restart with `npm run dev` and sign in at `/admin/login`.
+
+Migration `006_rate_limits.sql` enables shared production limits: 5 order attempts per 10 minutes, 20 tracking attempts per minute, and 5 used-phone submissions per 10 minutes for each client address.
 
 With credentials configured, storefront products come from PostgreSQL; checkout, tracking, stock confirmation, and used-phone requests are persistent. Without credentials, the storefront remains usable with its fallback demonstration catalog and database actions show a setup message.

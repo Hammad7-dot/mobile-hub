@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { trackingSchema } from "@/lib/validation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   if (!hasSupabaseEnv) return NextResponse.json({ error: "Database is not connected yet." }, { status: 503 });
+  const limited = rateLimitResponse(await checkRateLimit(request, "order:track"));
+  if (limited) return limited;
   const parsed = trackingSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid tracking details" }, { status: 400 });
   const supabase = await createClient();
