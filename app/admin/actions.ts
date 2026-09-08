@@ -6,7 +6,32 @@ import { requireAdmin } from "@/lib/admin";
 
 function parseImages(value: FormDataEntryValue | null) { try { const parsed=JSON.parse(String(value||"[]")); return Array.isArray(parsed)?parsed.filter(item=>typeof item==="string").slice(0,6):[]; } catch { return []; } }
 
-export async function saveProduct(formData:FormData){const {supabase}=await requireAdmin();const id=String(formData.get("id")||"");const payload={brand_id:String(formData.get("brand_id")),name:String(formData.get("name")).trim(),slug:String(formData.get("slug")).trim().toLowerCase(),sku:String(formData.get("sku")||"").trim()||null,price:Number(formData.get("price")),compare_at_price:Number(formData.get("compare_at_price"))||null,stock:Number(formData.get("stock")),status:String(formData.get("status")),featured:formData.get("featured")==="on",pta_approved:formData.get("pta_approved")==="on",warranty:String(formData.get("warranty")||"1 Year"),description:String(formData.get("description")||""),images:parseImages(formData.get("images")),specifications:{ram:String(formData.get("ram")||""),storage:String(formData.get("storage")||""),display:String(formData.get("display")||""),processor:String(formData.get("processor")||""),camera:String(formData.get("camera")||""),battery:String(formData.get("battery")||""),os:String(formData.get("os")||"")},updated_at:new Date().toISOString()};const query=id?supabase.from("products").update(payload).eq("id",id):supabase.from("products").insert(payload);const {error}=await query;if(error)throw new Error(error.message);revalidatePath("/admin/products");revalidatePath("/mobiles");}
+export async function saveProduct(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = String(formData.get("id") || "");
+  const name = String(formData.get("name") || "").trim();
+  const slug = String(formData.get("slug") || "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+  const price = Number(formData.get("price"));
+  const stock = Number(formData.get("stock"));
+  if (name.length < 2 || !slug || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) throw new Error("Check the product name, slug, price, and stock.");
+  const payload = {
+    brand_id: String(formData.get("brand_id")), name, slug,
+    sku: String(formData.get("sku") || "").trim() || null,
+    price, compare_at_price: Number(formData.get("compare_at_price")) || null, stock,
+    status: String(formData.get("status")), featured: formData.get("featured") === "on",
+    pta_approved: formData.get("pta_approved") === "on",
+    warranty: String(formData.get("warranty") || "1 Year"),
+    description: String(formData.get("description") || ""), images: parseImages(formData.get("images")),
+    specifications: Object.fromEntries(["ram", "storage", "display", "processor", "camera", "battery", "os"].map(key => [key, String(formData.get(key) || "")])),
+    updated_at: new Date().toISOString()
+  };
+  const query = id ? supabase.from("products").update(payload).eq("id", id) : supabase.from("products").insert(payload);
+  const { data, error } = await query.select("id").single();
+  if (error) throw new Error("Product save failed: " + error.message);
+  if (!data?.id) throw new Error("Product was not saved. Please sign in again and retry.");
+  revalidatePath("/admin/products"); revalidatePath("/mobiles"); revalidatePath("/");
+  redirect("/admin/products?saved=" + (id ? "updated" : "created"));
+}
 export async function deleteProduct(formData:FormData){const {supabase}=await requireAdmin();const id=String(formData.get("id"));const {error}=await supabase.from("products").update({status:"archived",updated_at:new Date().toISOString()}).eq("id",id);if(error)throw new Error(error.message);revalidatePath("/admin/products");}
 export async function updateOrderStatus(formData: FormData) {
   const { supabase } = await requireAdmin();
