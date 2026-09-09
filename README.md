@@ -25,7 +25,7 @@ Open `http://localhost:3000`.
 ## Supabase and admin setup
 
 1. Create a Supabase project.
-2. Run every SQL file in `supabase/migrations` in numerical order (`001` through `006`) using the Supabase SQL Editor.
+2. Run every SQL file in `supabase/migrations` in numerical order (`001` through `007`) using the Supabase SQL Editor.
 3. Run `supabase/seed.sql` only when creating a new, empty catalog.
 4. Copy `.env.example` to `.env.local` and enter the project URL and publishable key. Never expose or commit privileged database keys.
 5. Create an administrator in Supabase Authentication, then set that profile's role to `admin` as shown at `/admin/setup`.
@@ -44,3 +44,6 @@ TURNSTILE_SECRET_KEY=your_private_secret_key
 ```
 
 Add both variables to the production hosting environment. The secret key is server-only and must never be exposed or committed. Local development uses an explicit development bypass when these keys are absent; production fails closed if they are missing. Turnstile tokens are verified server-side for the expected form action and are single-use.
+## Inventory reservations
+
+Migration `007_inventory_reservations.sql` reserves product stock atomically when an order is created. Pending COD reservations last 30 minutes. Confirmation converts a reservation into sold inventory without deducting stock twice; cancellation or expiry returns the stock. Supabase Cron runs the expiry cleanup every five minutes. Existing pending orders created before migration `007` remain unreserved.
